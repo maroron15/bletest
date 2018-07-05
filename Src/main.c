@@ -39,10 +39,14 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f4xx_hal.h"
-#include <string.h>
-#include <stdlib.h>
-/* USER CODE BEGIN Includes */
 
+
+/* USER CODE BEGIN Includes */
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+//#include "ringbuffer.h"
+#define RBUFSIZE 500
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -67,53 +71,131 @@ static void MX_USART3_UART_Init(void);
 
 /* USER CODE BEGIN 0 */
 	uint8_t rec_from_BLE[500];
+	uint8_t tmp_from_BLE[1];
 	uint8_t rec_from_PC[500];
+	uint8_t tmp_from_PC[1];
 	uint8_t DISCON[17]="TTM:DISCONNECT\r\n\0";
+	uint8_t Ble_Cnt,Pc_Cnt;
+	
+//	ringbuffer_t rb;//ringbuffer variable
+	uint8_t tbrawbuffer[RBUFSIZE];//ring buffer's raw buffer
+	uint8_t userbuffer[RBUFSIZE];//the buffer for get data from ring buffer
+	
 	
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 { //HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_SET);
 	
-	if((huart->Instance)==USART6){ //uart to ble.  receive from ble module
+	if((huart->Instance)==USART6){ //uart - ble.  receive from ble module //to mcu
+		/* 
 		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_SET);//LD3 ON
-		if(!strncmp((const char *)rec_from_BLE,(const char *)DISCON,(uint8_t)14)){
-			HAL_UART_Transmit(&huart3,DISCON,sizeof(DISCON),200);
+		while(tmp_from_BLE[0]!=4 && tmp_from_BLE[0]!='\0' &&tmp_from_BLE[0]!='\n' &&tmp_from_BLE[0]!='\r' ){
+			rec_from_BLE[Ble_Cnt]=tmp_from_BLE[0];Ble_Cnt++;
+		}
+		
+		if(tmp_from_BLE[0]==4 || tmp_from_BLE[0]!='\0' || tmp_from_BLE[0]!='\n'  ){
+			rec_from_BLE[Ble_Cnt]=tmp_from_BLE[0];
+			if(!strncmp((const char *)rec_from_BLE,(const char *)DISCON,(uint8_t)14)){
+				HAL_UART_Transmit(&huart3,DISCON,sizeof(DISCON),200);
+				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_RESET); //LD3 OFF
+			}//Print "TTM:DISCONNECT"
+			else{			
+				uint8_t *tmp;
+				uint8_t cnt=0;
+				HAL_UART_Transmit(&huart3,rec_from_BLE,Ble_Cnt,200);
+			//	while(rec_from_BLE[cnt]!='\0'){
+				//	cnt++;
+				//}
+				//tmp=(uint8_t *)calloc(Ble_Cnt-1,sizeof(uint8_t));
+				//for(int i=0;i<Ble_Cnt;i++){
+					//tmp[i]=rec_from_BLE[i];
+				//}
+				//HAL_UART_Transmit(&huart3,tmp,sizeof(tmp)-4,200);
+				//free(tmp);
+			}//else 
+			Ble_Cnt=0; //re-init
+		}//end if
+		*/ 
+		uint8_t TmpBle[10],TmpBleCase;
+		TmpBleCase=rec_from_BLE[0];
+		switch(TmpBleCase){
+			case '0':
+				sprintf((char *)TmpBle,"BLE:I'm%c\n",TmpBleCase);
+				HAL_UART_Transmit(&huart3,TmpBle,9,100);
+				break;
+			case '1':
+				sprintf((char *)TmpBle,"BLE:I'm%c\n",TmpBleCase);
+				HAL_UART_Transmit(&huart3,TmpBle,9,100);
+				break;
+			case '2':
+				sprintf((char *)TmpBle,"BLE:I'm%c\n",TmpBleCase);
+				HAL_UART_Transmit(&huart3,TmpBle,9,100);
+				break;
+			case '3':
+				sprintf((char *)TmpBle,"BLE:I'm%c\n",TmpBleCase);
+				HAL_UART_Transmit(&huart3,TmpBle,9,100);
+				break;
+			case '4':
+				sprintf((char *)TmpBle,"BLE:I'm%c\n",TmpBleCase);
+				HAL_UART_Transmit(&huart3,TmpBle,9,100);
+				break;
+			case '5':
+				sprintf((char *)TmpBle,"BLE:I'm%c\n",TmpBleCase);
+				HAL_UART_Transmit(&huart3,TmpBle,9,100);
+				break;
+		}
 			HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_RESET); //LD3 OFF
-		}//Print "TTM:DISCONNECT"
-		else{			
-			uint8_t *tmp;
-			uint8_t cnt=0;
-			HAL_UART_Transmit(&huart3,rec_from_BLE,sizeof(rec_from_BLE),200);
-			while(rec_from_BLE[cnt]!='\0'){
-				cnt++;
-			}
-			tmp=(uint8_t *)calloc(cnt-1,sizeof(uint8_t));
-			for(int i=0;i<cnt;i++){
-				tmp[i]=rec_from_BLE[i];
-			}
-			HAL_UART_Transmit(&huart3,tmp,sizeof(tmp)-4,200);
-			free(tmp);
-		}//else 
-			HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_RESET); //LD3 OFF
-			HAL_UART_Receive_IT(&huart6,rec_from_BLE,14);	
+			HAL_UART_Receive_IT(&huart6,rec_from_BLE,1);	
+			HAL_UART_Receive_IT(&huart3,rec_from_PC,1);	
 					
 		}//USART6 End
 	
-	if((huart->Instance)==USART3){//uart to pc. receive from pc module 
+	if((huart->Instance)==USART3){//uart - pc. receive from pc //to mcu
 		//HAL_GPIO_WritePin(GPIOB,GPIO_PIN_7,GPIO_PIN_SET);//LD2 ON
-		uint8_t tmp[4]="hihi";
+		uint8_t TmpPc[10],TmpPcCase;
+		TmpPcCase=rec_from_PC[0];
+		switch(TmpPcCase){
+			case '0':
+				sprintf((char *)TmpPc,"PC:I'm%d\n",0);
+				HAL_UART_Transmit(&huart6,TmpPc,9,100);
+				break;
+			case '1':
+				sprintf((char *)TmpPc,"PC:I'm%d\n",1);
+				HAL_UART_Transmit(&huart6,TmpPc,9,100);
+				break;
+			case '2':
+				sprintf((char *)TmpPc,"PC:I'm%d\n",2);
+				HAL_UART_Transmit(&huart6,TmpPc,9,100);
+				break;
+			case '3':
+				sprintf((char *)TmpPc,"PC:I'm%d\n",3);
+				HAL_UART_Transmit(&huart6,TmpPc,9,100);
+				break;
+			case '4':
+				sprintf((char *)TmpPc,"PC:I'm%d\n",4);
+				HAL_UART_Transmit(&huart6,TmpPc,9,100);
+				break;
+			case '5':
+				sprintf((char *)TmpPc,"PC:I'm%d\n",5);
+				HAL_UART_Transmit(&huart6,TmpPc,9,100);
+				break;
+			
+		}
+		/*uart3
 		if(!strncmp((const char *)rec_from_PC,(const char *)"TTM:",4)){
 			HAL_UART_Transmit(&huart3,tmp,4,10);
+			HAL_UART_Transmit(&huart6,tmp,4,10);
 			HAL_GPIO_WritePin(GPIOB,GPIO_PIN_7,GPIO_PIN_SET);//LD2 ON
-			uint8_t AT[30],tmp[2],i=4,cnt=0,at_size;
+			uint8_t AT[30],tmp[20],i=4,cnt=0,at_size;
 			for(int j=0;j<4;j++){
 				AT[j]=rec_from_PC[j];
 			}
 			HAL_UART_Receive(&huart3,tmp,sizeof(tmp),2000);
-			while(tmp[1]!='\n' ||tmp[1]!='\r'||tmp[1]!='\0'){
-				AT[i]=tmp[0];
+			while(tmp[cnt]!='\n' &&tmp[cnt]!='\r'&&tmp[cnt]!='\0'){
+				AT[i]=tmp[cnt];
 				cnt++;
 				i++;
 			}
+		*/
 /*
 			while(AT[i]!='\0'){
 				HAL_UART_Receive(&huart3,tmp,1,5000);
@@ -121,17 +203,22 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 				i++;
 			}//while
 */
+/*
 			AT[i]='\r';
 			AT[i+1]='\n';
 			AT[i+2]='\0';
-		HAL_UART_Transmit(&huart6,AT,i+2,100); //transmit pc to ble
-		HAL_UART_Transmit(&huart3,AT,i+2,100); //print. echo
+		HAL_UART_Transmit(&huart6,AT,i+3,100); //transmit pc to ble
+		HAL_UART_Transmit(&huart3,AT,i+3,100); //print. echo
 		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_7,GPIO_PIN_SET);//LD2 ON
 		HAL_UART_Receive_IT(&huart3,rec_from_PC,4);//receive from PC
 	}//end strncmp
-	}
+	*/
 	
-}
+		HAL_UART_Receive_IT(&huart3,rec_from_PC,1);//receive from PC
+		HAL_UART_Receive_IT(&huart6,rec_from_BLE,1);//receive from PC
+	}//end uart3
+	
+}//end callback func
 
 /* USER CODE END 0 */
 
@@ -140,20 +227,19 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
   *
   * @retval None
   */
-
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+	
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
-
+	
   /* USER CODE BEGIN Init */
-
+//	ringbuffer_initialize(&rb,(uint8_t)RBUFSIZE);
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -174,17 +260,41 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 		HAL_GPIO_WritePin(GPIOD,GPIO_PIN_7,GPIO_PIN_RESET);//0: ENABLE 
-		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_RESET); //LD3 OFF 
+		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_RESET); //LD3 OFF   LED using for check
 		HAL_GPIO_WritePin(GPIOF,GPIO_PIN_12,GPIO_PIN_RESET); //BRTS 0: Host has data to send, and module will wait for data transmission from the host so will not sleep
 		HAL_GPIO_WritePin(GPIOF,GPIO_PIN_13,GPIO_PIN_SET); //BCTS 1 :Module has no data to send, or data has been sent, and the value of the signal will be set at 1
+		HAL_UART_Receive(&huart6,rec_from_BLE,14,30000);
+		HAL_UART_Transmit(&huart3,rec_from_BLE,14,100);
+		uint8_t arrtest[100],i=0;
   while (1)
   {
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
+		/*
+		BRTS
+			As the data sending requests (for module wake-up)
+			0: Host has data to send, and module will wait for data transmission from the host so will not sleep
+			1: Host has no data to send, or data has been sent. So the value of the signal should be set at “1”.
+		BCTS
+			Data input signal (for host wake-up, optional)
+			0: Module has data to send, and the host will receive the data.
+			1: Module has no data to send, or data has been sent, and the value of the signal will be set at “1”.
+		
+		HAL_GPIO_WritePin(GPIOF,GPIO_PIN_13,GPIO_PIN_RESET); //BCTS 0
+	  HAL_GPIO_WritePin(GPIOF,GPIO_PIN_12,GPIO_PIN_SET); //BRTS 1 
+		*/
+		
+		/* MCU -> Mobile test working 
+  	sprintf((char *)arrtest,"arr test=%d\n",i);
+		HAL_UART_Transmit(&huart6,arrtest,11,100);
+		HAL_UART_Transmit(&huart3,arrtest,11,100);
+		i++;
+		*/
+		
 	//	HAL_UART_Transmit(&huart3,arr,5,10);//uart to pc 
-		HAL_UART_Receive_IT(&huart6,rec_from_BLE,15);//receive from ble module
-		HAL_UART_Receive_IT(&huart3,rec_from_PC,4);//receive from PC
+		HAL_UART_Receive_IT(&huart6,tmp_from_BLE,1);//receive from ble module
+		HAL_UART_Receive_IT(&huart3,tmp_from_PC,1);//receive from PC
 		//HAL_UART_Transmit(&huart6,arr,5,10);//uart to BLE
 		HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_7);
 		HAL_Delay(500);

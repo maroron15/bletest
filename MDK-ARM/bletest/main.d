@@ -28,5 +28,5 @@ bletest\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ramfunc.
 bletest\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr.h
 bletest\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h
 bletest\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
-bletest\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
 bletest\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
+bletest\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
