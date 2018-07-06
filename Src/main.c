@@ -40,7 +40,6 @@
 #include "main.h"
 #include "stm32f4xx_hal.h"
 
-
 /* USER CODE BEGIN Includes */
 #include <stdlib.h>
 #include <string.h>
@@ -84,8 +83,23 @@ static void MX_USART3_UART_Init(void);
 	
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 { //HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_SET);
-	
+			/*
+		BRTS
+			As the data sending requests (for module wake-up)
+			0: Host has data to send, and module will wait for data transmission from the host so will not sleep
+			1: Host has no data to send, or data has been sent. So the value of the signal should be set at "1".
+		BCTS
+			Data input signal (for host wake-up, optional)
+			0: Module has data to send, and the host will receive the data.
+			1: Module has no data to send, or data has been sent, and the value of the signal will be set at "1".
+		
+		HAL_GPIO_WritePin(GPIOF,GPIO_PIN_13,GPIO_PIN_RESET); //BCTS 0
+	  HAL_GPIO_WritePin(GPIOF,GPIO_PIN_12,GPIO_PIN_SET); //BRTS 1 
+		*/
 	if((huart->Instance)==USART6){ //uart - ble.  receive from ble module //to mcu
+		
+		HAL_GPIO_WritePin(GPIOF,GPIO_PIN_13,GPIO_PIN_RESET); //BCTS 0
+	  HAL_GPIO_WritePin(GPIOF,GPIO_PIN_12,GPIO_PIN_SET); //BRTS 1 
 		/* 
 		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_SET);//LD3 ON
 		while(tmp_from_BLE[0]!=4 && tmp_from_BLE[0]!='\0' &&tmp_from_BLE[0]!='\n' &&tmp_from_BLE[0]!='\r' ){
@@ -115,35 +129,15 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 			Ble_Cnt=0; //re-init
 		}//end if
 		*/ 
-		uint8_t TmpBle[10],TmpBleCase;
+		uint8_t TmpBle[12],TmpBleCase;
 		TmpBleCase=rec_from_BLE[0];
-		switch(TmpBleCase){
-			case '0':
-				sprintf((char *)TmpBle,"BLE:I'm%c\n",TmpBleCase);
-				HAL_UART_Transmit(&huart3,TmpBle,9,100);
-				break;
-			case '1':
-				sprintf((char *)TmpBle,"BLE:I'm%c\n",TmpBleCase);
-				HAL_UART_Transmit(&huart3,TmpBle,9,100);
-				break;
-			case '2':
-				sprintf((char *)TmpBle,"BLE:I'm%c\n",TmpBleCase);
-				HAL_UART_Transmit(&huart3,TmpBle,9,100);
-				break;
-			case '3':
-				sprintf((char *)TmpBle,"BLE:I'm%c\n",TmpBleCase);
-				HAL_UART_Transmit(&huart3,TmpBle,9,100);
-				break;
-			case '4':
-				sprintf((char *)TmpBle,"BLE:I'm%c\n",TmpBleCase);
-				HAL_UART_Transmit(&huart3,TmpBle,9,100);
-				break;
-			case '5':
-				sprintf((char *)TmpBle,"BLE:I'm%c\n",TmpBleCase);
-				HAL_UART_Transmit(&huart3,TmpBle,9,100);
-				break;
+		if(TmpBleCase>='0'&&TmpBleCase<='9'){
+				sprintf((char *)TmpBle,"BLE:I'm%c\r\n",TmpBleCase);
+				HAL_UART_Transmit(&huart3,TmpBle,10,100);
+
 		}
 			HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_RESET); //LD3 OFF
+			HAL_GPIO_WritePin(GPIOF,GPIO_PIN_13,GPIO_PIN_SET); //BCTS 1
 			HAL_UART_Receive_IT(&huart6,rec_from_BLE,1);	
 			HAL_UART_Receive_IT(&huart3,rec_from_PC,1);	
 					
@@ -151,34 +145,37 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	
 	if((huart->Instance)==USART3){//uart - pc. receive from pc //to mcu
 		//HAL_GPIO_WritePin(GPIOB,GPIO_PIN_7,GPIO_PIN_SET);//LD2 ON
-		uint8_t TmpPc[10],TmpPcCase;
+		
+		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_7,GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOF,GPIO_PIN_13,GPIO_PIN_SET); //BCTS 1
+	  HAL_GPIO_WritePin(GPIOF,GPIO_PIN_12,GPIO_PIN_RESET); //BRTS 0
+		uint8_t TmpPc[12],TmpPcCase;
 		TmpPcCase=rec_from_PC[0];
 		switch(TmpPcCase){
 			case '0':
-				sprintf((char *)TmpPc,"PC:I'm%d\n",0);
+				sprintf((char *)TmpPc,"PC:I'm%d\r\n",0);
 				HAL_UART_Transmit(&huart6,TmpPc,9,100);
 				break;
 			case '1':
-				sprintf((char *)TmpPc,"PC:I'm%d\n",1);
+				sprintf((char *)TmpPc,"PC:I'm%d\r\n",1);
 				HAL_UART_Transmit(&huart6,TmpPc,9,100);
 				break;
 			case '2':
-				sprintf((char *)TmpPc,"PC:I'm%d\n",2);
+				sprintf((char *)TmpPc,"PC:I'm%d\r\n",2);
 				HAL_UART_Transmit(&huart6,TmpPc,9,100);
 				break;
 			case '3':
-				sprintf((char *)TmpPc,"PC:I'm%d\n",3);
+				sprintf((char *)TmpPc,"PC:I'm%d\r\n",3);
 				HAL_UART_Transmit(&huart6,TmpPc,9,100);
 				break;
 			case '4':
-				sprintf((char *)TmpPc,"PC:I'm%d\n",4);
+				sprintf((char *)TmpPc,"PC:I'm%d\r\n",4);
 				HAL_UART_Transmit(&huart6,TmpPc,9,100);
 				break;
 			case '5':
-				sprintf((char *)TmpPc,"PC:I'm%d\n",5);
+				sprintf((char *)TmpPc,"PC:I'm%d\r\n",5);
 				HAL_UART_Transmit(&huart6,TmpPc,9,100);
 				break;
-			
 		}
 		/*uart3
 		if(!strncmp((const char *)rec_from_PC,(const char *)"TTM:",4)){
@@ -214,8 +211,13 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	}//end strncmp
 	*/
 	
+		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_SET);
+
 		HAL_UART_Receive_IT(&huart3,rec_from_PC,1);//receive from PC
 		HAL_UART_Receive_IT(&huart6,rec_from_BLE,1);//receive from PC
+		//HAL_Delay(100);
+		//HAL_GPIO_WritePin(GPIOF,GPIO_PIN_12,GPIO_PIN_SET); //BRTS 1
+		
 	}//end uart3
 	
 }//end callback func
@@ -237,7 +239,7 @@ int main(void)
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
-	
+
   /* USER CODE BEGIN Init */
 //	ringbuffer_initialize(&rb,(uint8_t)RBUFSIZE);
   /* USER CODE END Init */
@@ -261,10 +263,13 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 		HAL_GPIO_WritePin(GPIOD,GPIO_PIN_7,GPIO_PIN_RESET);//0: ENABLE 
 		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_RESET); //LD3 OFF   LED using for check
-		HAL_GPIO_WritePin(GPIOF,GPIO_PIN_12,GPIO_PIN_RESET); //BRTS 0: Host has data to send, and module will wait for data transmission from the host so will not sleep
-		HAL_GPIO_WritePin(GPIOF,GPIO_PIN_13,GPIO_PIN_SET); //BCTS 1 :Module has no data to send, or data has been sent, and the value of the signal will be set at 1
+		
+		HAL_GPIO_WritePin(GPIOF,GPIO_PIN_12,GPIO_PIN_SET); //BRTS 1: Host has no data to send, or data has been sent. So the value of the signal should be set at “1”.
+		HAL_GPIO_WritePin(GPIOF,GPIO_PIN_13,GPIO_PIN_RESET); //BCTS 0 :Module has data to send, and the host will receive the data.
+		
 		HAL_UART_Receive(&huart6,rec_from_BLE,14,30000);
 		HAL_UART_Transmit(&huart3,rec_from_BLE,14,100);
+		//HAL_GPIO_WritePin(GPIOF,GPIO_PIN_12,GPIO_PIN_SET); //BRTS 1: Host has no data to send, or data has been sent. So the value of the signal should be set at "1"
 		uint8_t arrtest[100],i=0;
   while (1)
   {
@@ -275,11 +280,11 @@ int main(void)
 		BRTS
 			As the data sending requests (for module wake-up)
 			0: Host has data to send, and module will wait for data transmission from the host so will not sleep
-			1: Host has no data to send, or data has been sent. So the value of the signal should be set at “1”.
+			1: Host has no data to send, or data has been sent. So the value of the signal should be set at "1".
 		BCTS
 			Data input signal (for host wake-up, optional)
 			0: Module has data to send, and the host will receive the data.
-			1: Module has no data to send, or data has been sent, and the value of the signal will be set at “1”.
+			1: Module has no data to send, or data has been sent, and the value of the signal will be set at "1".
 		
 		HAL_GPIO_WritePin(GPIOF,GPIO_PIN_13,GPIO_PIN_RESET); //BCTS 0
 	  HAL_GPIO_WritePin(GPIOF,GPIO_PIN_12,GPIO_PIN_SET); //BRTS 1 
@@ -296,6 +301,8 @@ int main(void)
 		HAL_UART_Receive_IT(&huart6,tmp_from_BLE,1);//receive from ble module
 		HAL_UART_Receive_IT(&huart3,tmp_from_PC,1);//receive from PC
 		//HAL_UART_Transmit(&huart6,arr,5,10);//uart to BLE
+		HAL_GPIO_WritePin(GPIOF,GPIO_PIN_12,GPIO_PIN_SET); //BRTS 1
+		HAL_GPIO_WritePin(GPIOF,GPIO_PIN_13,GPIO_PIN_SET); //BCTS 1
 		HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_7);
 		HAL_Delay(500);
   }
