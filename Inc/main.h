@@ -49,24 +49,20 @@
 
 /* Private define ------------------------------------------------------------*/
 
-#define BRTS_Pin GPIO_PIN_12
-#define BRTS_GPIO_Port GPIOF
-#define BCTS_Pin GPIO_PIN_13
-#define BCTS_GPIO_Port GPIOF
 #define Connection_status_indicator_Pin GPIO_PIN_0
 #define Connection_status_indicator_GPIO_Port GPIOG
 #define Sleep_mode_indicator_Pin GPIO_PIN_1
 #define Sleep_mode_indicator_GPIO_Port GPIOG
-#define LD_Pin GPIO_PIN_14
-#define LD_GPIO_Port GPIOB
+#define LD_RED_Pin GPIO_PIN_14
+#define LD_RED_GPIO_Port GPIOB
 #define USB_STLINK_UART_TX_Pin GPIO_PIN_8
 #define USB_STLINK_UART_TX_GPIO_Port GPIOD
 #define USB_STLINK_UART_RX_Pin GPIO_PIN_9
 #define USB_STLINK_UART_RX_GPIO_Port GPIOD
 #define EN_Pin GPIO_PIN_7
 #define EN_GPIO_Port GPIOD
-#define LDB7_Pin GPIO_PIN_7
-#define LDB7_GPIO_Port GPIOB
+#define LD_BLUE_Pin GPIO_PIN_7
+#define LD_BLUE_GPIO_Port GPIOB
 
 /* ########################## Assert Selection ############################## */
 /**
